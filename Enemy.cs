@@ -8,7 +8,6 @@ public class Enemy : MonoBehaviour
     public float maxHealth = 100f;
     public float shield = 0f;
     public RectTransform healthBar; // Direct reference to the health bar RectTransform
-    public Transform deathZone;
 
     [Header("Pathing Settings")]
     public int waypointIndex = 1;          // Current waypoint index
@@ -16,28 +15,29 @@ public class Enemy : MonoBehaviour
     public GameObject waypointList;        // Parent object containing waypoints
     public Vector3 pathOffset = new Vector3 (0, 2, 0);
 
+
     private Transform[] waypointTransforms; // Array of waypoints
 
     void Start()
     {
         // Get all waypoint transforms and initialize starting position
+        waypointList = GameObject.Find("Waypoints");
         waypointTransforms = waypointList.GetComponent<Transform>().GetComponentsInChildren<Transform>();
         transform.position = waypointTransforms[1].position; // Start at the first waypoint
+        gameObject.layer = 3;
     }
 
     void Update()
     {
         UpdateHealthBar();
 
+        // Move the enemy if it still has HP
         if ( currentHealth > 0 )
-        {
             HandleTraveling();
-        }
 
+        // Handle death action if there is no more HP
         else
-        {
             HandleDeath();
-        }
 
     }
 
@@ -51,7 +51,7 @@ public class Enemy : MonoBehaviour
             // Update the width of the health bar using its sizeDelta property
             healthBar.sizeDelta = new Vector2(healthNormalized * healthBarSize, healthBar.sizeDelta.y);
 
-            Debug.Log("Health Bar Width Updated: " + healthBar.sizeDelta.x);
+            // Debug.Log("Health Bar Width Updated: " + healthBar.sizeDelta.x);
         }
         else
         {
@@ -61,10 +61,7 @@ public class Enemy : MonoBehaviour
 
     void HandleDeath()
     {
-        if ( currentHealth <= 0 )
-        {
-            transform.position = deathZone.position;
-        }
+        Destroy(gameObject);
     }
 
     void HandleTraveling()
@@ -84,6 +81,18 @@ public class Enemy : MonoBehaviour
             {
                 waypointIndex++; // Move to the next waypoint
             }
+        }
+
+        if (waypointIndex == waypointTransforms.Length - 1)
+        {
+            // Find the EndNode in the Game Hierarchy
+            GameObject EndNode = GameObject.Find("EndNode");
+
+            // Destroy the Base for now => Add damage mechanic later
+            Destroy(EndNode);
+
+            // Self destruct when reaching the end
+            Destroy(gameObject);
         }
     }
 
